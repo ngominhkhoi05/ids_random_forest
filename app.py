@@ -13,7 +13,7 @@ from flask import Flask, jsonify, send_from_directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "ids_model.pkl")
 DATASET_PATH = os.path.join(BASE_DIR, "dataset", "NSL_ppTest.csv")
-TRAIN_PATH = os.path.join(BASE_DIR, "dataset", "NSL_boosted-0.csv")
+TRAIN_PATH = os.path.join(BASE_DIR, "dataset", "NSL_boosted-1.csv")
 
 app = Flask(__name__, template_folder="templates")
 
@@ -91,7 +91,8 @@ def load_resources():
         df[col] = label_encoders[col].transform(df[col])
 
     # Convert ground-truth label to 0/1
-    if df[label_col].dtype == object:
+    # Support both object (older pandas) and string (pandas 2+/3.x) dtypes
+    if df[label_col].dtype != np.int64 and df[label_col].dtype != np.int32:
         df[label_col] = df[label_col].apply(
             lambda x: 0 if x == "normal" else 1
         )
