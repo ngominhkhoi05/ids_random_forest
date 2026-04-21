@@ -1,33 +1,34 @@
 <!DOCTYPE html>
 <html lang="vi" data-bs-theme="dark">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IDS SOC Dashboard — Real-Time Intrusion Detection</title>
 
   <!-- Bootstrap 5.3 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
   <!-- Bootstrap Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-        rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
 
   <style>
     :root {
-      --bg-primary:    #0d1117;
-      --bg-secondary:  #161b22;
-      --bg-card:       #1c2128;
-      --border:        #30363d;
-      --text-primary:  #e6edf3;
-      --text-muted:    #8b949e;
-      --accent-green:  #3fb950;
-      --accent-red:    #f85149;
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-card: #1c2128;
+      --border: #30363d;
+      --text-primary: #e6edf3;
+      --text-muted: #8b949e;
+      --accent-green: #3fb950;
+      --accent-red: #f85149;
       --accent-yellow: #d29922;
-      --accent-blue:   #58a6ff;
+      --accent-blue: #58a6ff;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       background-color: var(--bg-primary);
@@ -64,17 +65,32 @@
       border-radius: 20px;
     }
 
-    .status-badge.idle    { background: #21262d; color: var(--text-muted); }
+    .status-badge.idle {
+      background: #21262d;
+      color: var(--text-muted);
+    }
+
     .status-badge.scanning {
-      background: rgba(63,185,80,.15);
+      background: rgba(63, 185, 80, .15);
       color: var(--accent-green);
       animation: pulse-green 1.5s ease-in-out infinite;
     }
-    .status-badge.stopped { background: rgba(248,81,73,.15); color: var(--accent-red); }
+
+    .status-badge.stopped {
+      background: rgba(248, 81, 73, .15);
+      color: var(--accent-red);
+    }
 
     @keyframes pulse-green {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(63,185,80,.5); }
-      50%       { box-shadow: 0 0 0 6px rgba(63,185,80,0); }
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(63, 185, 80, .5);
+      }
+
+      50% {
+        box-shadow: 0 0 0 6px rgba(63, 185, 80, 0);
+      }
     }
 
     /* ── Stat Cards ───────────────────────────────────────────── */
@@ -91,7 +107,7 @@
 
     .stat-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(0,0,0,.4);
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .4);
     }
 
     .stat-label {
@@ -115,13 +131,21 @@
       margin-top: 0.3rem;
     }
 
-    .stat-card.total  .stat-icon { color: var(--accent-blue); }
-    .stat-card.safe   .stat-icon { color: var(--accent-green); }
-    .stat-card.block  .stat-icon { color: var(--accent-red); }
+    .stat-card.total .stat-icon {
+      color: var(--accent-blue);
+    }
+
+    .stat-card.safe .stat-icon {
+      color: var(--accent-green);
+    }
+
+    .stat-card.block .stat-icon {
+      color: var(--accent-red);
+    }
 
     /* ── Action Buttons ───────────────────────────────────────── */
     .btn-monitor {
-      background: rgba(63,185,80,.1);
+      background: rgba(63, 185, 80, .1);
       border: 1px solid var(--accent-green);
       color: var(--accent-green);
       font-weight: 600;
@@ -138,7 +162,7 @@
     }
 
     .btn-stop {
-      background: rgba(248,81,73,.1);
+      background: rgba(248, 81, 73, .1);
       border: 1px solid var(--accent-red);
       color: var(--accent-red);
       font-weight: 600;
@@ -195,8 +219,15 @@
     }
 
     @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0;
+      }
     }
 
     .table-log {
@@ -219,7 +250,7 @@
     .table-log tbody td {
       vertical-align: middle;
       padding: 0.6rem 0.9rem;
-      border-bottom: 1px solid rgba(48,54,61,.5);
+      border-bottom: 1px solid rgba(48, 54, 61, .5);
       white-space: nowrap;
     }
 
@@ -229,25 +260,30 @@
 
     /* Row states */
     .row-safe {
-      background: rgba(63,185,80,.04);
+      background: rgba(63, 185, 80, .04);
     }
 
     .row-safe:hover {
-      background: rgba(63,185,80,.08) !important;
+      background: rgba(63, 185, 80, .08) !important;
     }
 
     .row-attack {
-      background: rgba(248,81,73,.1);
+      background: rgba(248, 81, 73, .1);
       animation: row-flash 1.2s ease-out;
     }
 
     .row-attack:hover {
-      background: rgba(248,81,73,.18) !important;
+      background: rgba(248, 81, 73, .18) !important;
     }
 
     @keyframes row-flash {
-      0%   { background: rgba(248,81,73,.4); }
-      100% { background: rgba(248,81,73,.1); }
+      0% {
+        background: rgba(248, 81, 73, .4);
+      }
+
+      100% {
+        background: rgba(248, 81, 73, .1);
+      }
     }
 
     /* Badge pill */
@@ -260,12 +296,12 @@
     }
 
     .badge-safe {
-      background: rgba(63,185,80,.2);
+      background: rgba(63, 185, 80, .2);
       color: var(--accent-green);
     }
 
     .badge-attack {
-      background: rgba(248,81,73,.3);
+      background: rgba(248, 81, 73, .3);
       color: var(--accent-red);
     }
 
@@ -284,8 +320,13 @@
       transition: width 0.4s ease;
     }
 
-    .conf-safe  { background: var(--accent-green); }
-    .conf-attack { background: var(--accent-red); }
+    .conf-safe {
+      background: var(--accent-green);
+    }
+
+    .conf-attack {
+      background: var(--accent-red);
+    }
 
     /* Empty state */
     .empty-state {
@@ -330,8 +371,14 @@
 
     /* Responsive tweaks */
     @media (max-width: 768px) {
-      .stat-value { font-size: 1.5rem; }
-      .btn-monitor, .btn-stop { width: 100%; }
+      .stat-value {
+        font-size: 1.5rem;
+      }
+
+      .btn-monitor,
+      .btn-stop {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -401,9 +448,8 @@
           <label class="form-label mb-0" style="font-size:0.75rem; color:var(--text-muted); white-space:nowrap;">
             Tốc độ:
           </label>
-          <input type="range" class="form-range" id="speedRange" min="200" max="2000" value="500"
-                 step="100" style="width:140px;"
-                 oninput="updateInterval(this.value)" />
+          <input type="range" class="form-range" id="speedRange" min="200" max="2000" value="500" step="100"
+            style="width:140px;" oninput="updateInterval(this.value)" />
           <span id="speedLabel" style="font-size:0.75rem; color:var(--text-muted); min-width:60px;">0.5s</span>
         </div>
       </div>
@@ -463,27 +509,27 @@
 
   <script>
     // ── State ────────────────────────────────────────────────────
-    let intervalId     = null;
-    let rowCounter     = 0;
-    let totalScanned   = 0;
-    let totalBlocked   = 0;
-    let totalSafe      = 0;
-    const MAX_ROWS     = 20;
-    const API_URL      = '/api/stream_logs';
+    let intervalId = null;
+    let rowCounter = 0;
+    let totalScanned = 0;
+    let totalBlocked = 0;
+    let totalSafe = 0;
+    const MAX_ROWS = 20;
+    const API_URL = '/api/stream_logs';
 
     // ── DOM refs ─────────────────────────────────────────────────
-    const $btnStart    = document.getElementById('btnStart');
-    const $btnStop     = document.getElementById('btnStop');
+    const $btnStart = document.getElementById('btnStart');
+    const $btnStop = document.getElementById('btnStop');
     const $totalScanned = document.getElementById('totalScanned');
-    const $totalSafe   = document.getElementById('totalSafe');
+    const $totalSafe = document.getElementById('totalSafe');
     const $totalBlocked = document.getElementById('totalBlocked');
-    const $logBody     = document.getElementById('logTableBody');
-    const $emptyState  = document.getElementById('emptyState');
-    const $liveDot     = document.getElementById('liveDot');
+    const $logBody = document.getElementById('logTableBody');
+    const $emptyState = document.getElementById('emptyState');
+    const $liveDot = document.getElementById('liveDot');
     const $statusBadge = document.getElementById('statusBadge');
-    const $tableCount  = document.getElementById('tableCount');
-    const $speedRange   = document.getElementById('speedRange');
-    const $speedLabel   = document.getElementById('speedLabel');
+    const $tableCount = document.getElementById('tableCount');
+    const $speedRange = document.getElementById('speedRange');
+    const $speedLabel = document.getElementById('speedLabel');
 
     let currentInterval = parseInt($speedRange.value);
 
@@ -495,8 +541,8 @@
     function setStatus(mode) {
       $statusBadge.className = 'status-badge ' + mode;
       const icons = {
-        idle:    '<i class="bi bi-circle-fill me-1" style="font-size:0.5rem;vertical-align:middle;"></i>HỆ THỐNG CHỜ',
-        scanning:'<i class="bi bi-circle-fill me-1" style="font-size:0.5rem;vertical-align:middle;"></i>ĐANG GIÁM SÁT',
+        idle: '<i class="bi bi-circle-fill me-1" style="font-size:0.5rem;vertical-align:middle;"></i>HỆ THỐNG CHỜ',
+        scanning: '<i class="bi bi-circle-fill me-1" style="font-size:0.5rem;vertical-align:middle;"></i>ĐANG GIÁM SÁT',
         stopped: '<i class="bi bi-circle-fill me-1" style="font-size:0.5rem;vertical-align:middle;"></i>ĐÃ DỪNG',
       };
       $statusBadge.innerHTML = icons[mode] || icons.idle;
@@ -538,16 +584,16 @@
 
       // Update counters
       $totalScanned.textContent = fmtNum(totalScanned);
-      $totalSafe.textContent    = fmtNum(totalSafe);
+      $totalSafe.textContent = fmtNum(totalSafe);
       $totalBlocked.textContent = fmtNum(totalBlocked);
-      $tableCount.textContent   = `${Math.min(rowCounter, MAX_ROWS)} / ${MAX_ROWS} dòng gần nhất`;
+      $tableCount.textContent = `${Math.min(rowCounter, MAX_ROWS)} / ${MAX_ROWS} dòng gần nhất`;
 
-      const isAttack     = entry.prediction === 1;
-      const confPct       = Math.round(entry.confidence * 100);
-      const trueLabelStr  = entry.true_label === 0 ? 'Normal' : 'Attack';
-      const predLabel     = isAttack ? 'Tấn công' : 'An toàn';
-      const predClass     = isAttack ? 'badge-attack' : 'badge-safe';
-      const rowClass      = isAttack ? 'row-attack' : 'row-safe';
+      const isAttack = entry.prediction === 1;
+      const confPct = Math.round(entry.confidence * 100);
+      const trueLabelStr = entry.true_label === 0 ? 'Normal' : 'Attack';
+      const predLabel = isAttack ? 'Tấn công' : 'An toàn';
+      const predClass = isAttack ? 'badge-attack' : 'badge-safe';
+      const rowClass = isAttack ? 'row-attack' : 'row-safe';
       const confFillClass = isAttack ? 'conf-attack' : 'conf-safe';
 
       // Build row HTML
@@ -584,7 +630,7 @@
       if (intervalId !== null) return;
 
       $btnStart.disabled = true;
-      $btnStop.disabled  = false;
+      $btnStop.disabled = false;
       $liveDot.classList.add('active');
       setStatus('scanning');
 
@@ -600,7 +646,7 @@
       intervalId = null;
 
       $btnStart.disabled = false;
-      $btnStop.disabled  = true;
+      $btnStop.disabled = true;
       $liveDot.classList.remove('active');
       setStatus('stopped');
     }
@@ -610,4 +656,5 @@
   </script>
 
 </body>
+
 </html>
