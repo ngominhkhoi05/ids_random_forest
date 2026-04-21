@@ -143,6 +143,212 @@
       color: var(--accent-red);
     }
 
+    .stat-card.accuracy .stat-icon {
+      color: var(--accent-yellow);
+    }
+
+    .stat-card.correct .stat-icon {
+      color: var(--accent-green);
+    }
+
+    .stat-card.wrong .stat-icon {
+      color: var(--accent-red);
+    }
+
+    /* ── Accuracy Section ─────────────────────────────────────────── */
+    .stats-row-2 {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem 1.4rem;
+      display: flex;
+      align-items: stretch;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .stats-row-2 .divider {
+      width: 1px;
+      background: var(--border);
+      align-self: stretch;
+    }
+
+    /* Donut chart */
+    .donut-wrapper {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .donut-chart {
+      position: relative;
+      width: 110px;
+      height: 110px;
+    }
+
+    .donut-chart svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .donut-chart circle {
+      fill: none;
+      stroke-width: 14;
+      cx: 55;
+      cy: 55;
+      r: 41;
+    }
+
+    .donut-bg { stroke: var(--border); }
+
+    .donut-safe {
+      stroke: var(--accent-green);
+      stroke-dasharray: 0 258;
+      transition: stroke-dasharray 0.6s ease;
+    }
+
+    .donut-blocked {
+      stroke: var(--accent-red);
+      stroke-dasharray: 0 258;
+      transition: stroke-dasharray 0.6s ease;
+    }
+
+    .donut-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .donut-center .pct {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .donut-center .sub {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .donut-legend {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.72rem;
+    }
+
+    .donut-legend .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    /* Accuracy bar */
+    .accuracy-section {
+      flex: 1;
+      min-width: 240px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .accuracy-section .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .accuracy-bar-wrapper {
+      background: var(--border);
+      border-radius: 6px;
+      height: 22px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .acc-bar-correct {
+      height: 100%;
+      background: var(--accent-green);
+      transition: width 0.5s ease;
+    }
+
+    .acc-bar-wrong {
+      height: 100%;
+      background: var(--accent-red);
+      transition: width 0.5s ease;
+    }
+
+    .accuracy-numbers {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .accuracy-numbers .correct { color: var(--accent-green); font-weight: 600; }
+    .accuracy-numbers .wrong   { color: var(--accent-red);   font-weight: 600; }
+
+    /* Ground-truth comparison */
+    .gt-section {
+      flex-shrink: 0;
+      min-width: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .gt-section .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .gt-bar-wrapper {
+      background: var(--border);
+      border-radius: 6px;
+      height: 22px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .gt-bar-normal {
+      height: 100%;
+      background: var(--accent-blue);
+      transition: width 0.5s ease;
+    }
+
+    .gt-bar-attack {
+      height: 100%;
+      background: var(--accent-red);
+      transition: width 0.5s ease;
+    }
+
+    .gt-numbers {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .gt-numbers .normal { color: var(--accent-blue); font-weight: 600; }
+    .gt-numbers .attack { color: var(--accent-red);  font-weight: 600; }
+
     /* ── Action Buttons ───────────────────────────────────────── */
     .btn-monitor {
       background: rgba(63, 185, 80, .1);
@@ -431,9 +637,99 @@
         </div>
       </div>
 
+      <div class="col-md-2 col-6">
+        <div class="stat-card accuracy">
+          <span class="stat-label">Độ chính xác</span>
+          <span class="stat-value" id="accuracyPct" style="font-size:1.6rem; color:var(--accent-yellow);">--</span>
+          <i class="bi bi-graph-up stat-icon"></i>
+        </div>
+      </div>
+
+      <div class="col-md-2 col-6">
+        <div class="stat-card correct">
+          <span class="stat-label">Dự đoán đúng</span>
+          <span class="stat-value" id="totalCorrect" style="font-size:1.6rem;">0</span>
+          <i class="bi bi-check2 stat-icon"></i>
+        </div>
+      </div>
+
+      <div class="col-md-2 col-6">
+        <div class="stat-card wrong">
+          <span class="stat-label">Dự đoán sai</span>
+          <span class="stat-value" id="totalWrong" style="font-size:1.6rem;">0</span>
+          <i class="bi bi-x-lg stat-icon"></i>
+        </div>
+      </div>
+
     </div><!-- /row stat cards -->
 
-    <!-- Row 2: Controls -->
+    <!-- Row 2: Real-time accuracy + donut + ground-truth bar -->
+    <div class="row mb-3">
+      <div class="col-12">
+        <div class="stats-row-2">
+
+          <!-- Donut: Safe vs Blocked -->
+          <div class="donut-wrapper">
+            <div class="donut-chart">
+              <svg viewBox="0 0 110 110">
+                <circle class="donut-bg" cx="55" cy="55" r="41" />
+                <circle class="donut-safe" id="donutSafe" cx="55" cy="55" r="41" />
+                <circle class="donut-blocked" id="donutBlocked" cx="55" cy="55" r="41" />
+              </svg>
+              <div class="donut-center">
+                <div class="pct" id="safePct">--%</div>
+                <div class="sub">An toàn</div>
+              </div>
+            </div>
+            <div class="donut-legend">
+              <span><span class="dot" style="background:var(--accent-green);"></span>An toàn <strong id="legendSafe">0</strong></span>
+              <span><span class="dot" style="background:var(--accent-red);"></span>Chặn <strong id="legendBlocked">0</strong></span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Session accuracy bar -->
+          <div class="accuracy-section">
+            <div class="section-label">Độ chính xác phiên giám sát</div>
+            <div class="accuracy-bar-wrapper">
+              <div class="acc-bar-correct" id="accBarCorrect" style="width:0%"></div>
+              <div class="acc-bar-wrong" id="accBarWrong" style="width:0%"></div>
+            </div>
+            <div class="accuracy-numbers">
+              <span class="correct">&#10003; Đúng: <strong id="accCorrect">0</strong></span>
+              <span>Accuracy: <strong id="accAccuracy" style="color:var(--accent-yellow);">--</strong></span>
+              <span class="wrong">&#10007; Sai: <strong id="accWrong">0</strong></span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Ground-truth ratio -->
+          <div class="gt-section">
+            <div class="section-label">Tỷ lệ Normal / Attack (dataset)</div>
+            <div class="gt-bar-wrapper">
+              <div class="gt-bar-normal" id="gtBarNormal" style="width:50%"></div>
+              <div class="gt-bar-attack" id="gtBarAttack" style="width:50%"></div>
+            </div>
+            <div class="gt-numbers">
+              <span class="normal">&#9679; Normal: <strong id="gtNormal">--</strong></span>
+              <span class="attack">&#9679; Attack: <strong id="gtAttack">--</strong></span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Reset button -->
+          <div class="d-flex align-items-center">
+            <button id="btnReset" class="btn btn-sm" style="background:rgba(210,153,34,.15);border:1px solid var(--accent-yellow);color:var(--accent-yellow);font-size:0.75rem;" onclick="resetStats()">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+            </button>
+          </div>
+
+        </div><!-- /stats-row-2 -->
+      </div>
+    </div><!-- /row accuracy -->    <!-- Row 3: Controls -->
     <div class="row mb-3">
       <div class="col-12 d-flex align-items-center gap-3 flex-wrap">
         <button id="btnStart" class="btn btn-monitor" onclick="startMonitoring()">
@@ -514,15 +810,23 @@
     let totalScanned = 0;
     let totalBlocked = 0;
     let totalSafe = 0;
+    let totalCorrect = 0;
+    let totalWrong = 0;
+    let sessionAccuracy = 0;
     const MAX_ROWS = 20;
     const API_URL = '/api/stream_logs';
+    const STATS_URL = '/api/stats';
 
     // ── DOM refs ─────────────────────────────────────────────────
     const $btnStart = document.getElementById('btnStart');
     const $btnStop = document.getElementById('btnStop');
+    const $btnReset = document.getElementById('btnReset');
     const $totalScanned = document.getElementById('totalScanned');
     const $totalSafe = document.getElementById('totalSafe');
     const $totalBlocked = document.getElementById('totalBlocked');
+    const $accuracyPct = document.getElementById('accuracyPct');
+    const $totalCorrect = document.getElementById('totalCorrect');
+    const $totalWrong = document.getElementById('totalWrong');
     const $logBody = document.getElementById('logTableBody');
     const $emptyState = document.getElementById('emptyState');
     const $liveDot = document.getElementById('liveDot');
@@ -530,6 +834,23 @@
     const $tableCount = document.getElementById('tableCount');
     const $speedRange = document.getElementById('speedRange');
     const $speedLabel = document.getElementById('speedLabel');
+    // Donut chart
+    const $donutSafe = document.getElementById('donutSafe');
+    const $donutBlocked = document.getElementById('donutBlocked');
+    const $safePct = document.getElementById('safePct');
+    const $legendSafe = document.getElementById('legendSafe');
+    const $legendBlocked = document.getElementById('legendBlocked');
+    // Accuracy bar
+    const $accBarCorrect = document.getElementById('accBarCorrect');
+    const $accBarWrong = document.getElementById('accBarWrong');
+    const $accCorrect = document.getElementById('accCorrect');
+    const $accWrong = document.getElementById('accWrong');
+    const $accAccuracy = document.getElementById('accAccuracy');
+    // Ground-truth bar
+    const $gtBarNormal = document.getElementById('gtBarNormal');
+    const $gtBarAttack = document.getElementById('gtBarAttack');
+    const $gtNormal = document.getElementById('gtNormal');
+    const $gtAttack = document.getElementById('gtAttack');
 
     let currentInterval = parseInt($speedRange.value);
 
@@ -551,11 +872,59 @@
     function updateInterval(ms) {
       currentInterval = ms;
       $speedLabel.textContent = (ms / 1000).toFixed(1) + 's';
-      // If already monitoring, restart with new interval
       if (intervalId !== null) {
         clearInterval(intervalId);
         intervalId = setInterval(pollLog, currentInterval);
       }
+    }
+
+    // ── Update stats panel ──────────────────────────────────────
+    function updateStatsUI() {
+      const total = totalScanned;
+      const accPct = total > 0 ? (totalCorrect / total * 100) : 0;
+
+      // Top stat cards
+      $accuracyPct.textContent = total > 0 ? accPct.toFixed(1) + '%' : '--';
+      $totalCorrect.textContent = fmtNum(totalCorrect);
+      $totalWrong.textContent = fmtNum(totalWrong);
+
+      // Donut chart (safe vs blocked of all scanned)
+      const circumference = 2 * Math.PI * 41; // r=41
+      const safeRatio = total > 0 ? totalSafe / total : 0;
+      const blockedRatio = total > 0 ? totalBlocked / total : 0;
+      $donutSafe.setAttribute('stroke-dasharray', (safeRatio * circumference) + ' ' + circumference);
+      $donutBlocked.setAttribute('stroke-dasharray', (blockedRatio * circumference) + ' ' + circumference);
+      $donutBlocked.setAttribute('stroke-dashoffset', -(safeRatio * circumference));
+      $safePct.textContent = total > 0 ? Math.round(safeRatio * 100) + '%' : '--%';
+      $legendSafe.textContent = fmtNum(totalSafe);
+      $legendBlocked.textContent = fmtNum(totalBlocked);
+
+      // Accuracy bar (correct vs wrong)
+      const correctRatio = total > 0 ? totalCorrect / total : 0;
+      const wrongRatio = total > 0 ? totalWrong / total : 0;
+      $accBarCorrect.style.width = (correctRatio * 100) + '%';
+      $accBarWrong.style.width = (wrongRatio * 100) + '%';
+      $accCorrect.textContent = fmtNum(totalCorrect);
+      $accWrong.textContent = fmtNum(totalWrong);
+      $accAccuracy.textContent = total > 0 ? accPct.toFixed(1) + '%' : '--';
+    }
+
+    // ── Load dataset stats from API ─────────────────────────────
+    async function loadDatasetStats() {
+      try {
+        const res = await fetch(STATS_URL);
+        if (!res.ok) return;
+        const data = await res.json();
+        const total = (data.normal || 0) + (data.attack || 0);
+        if (total > 0) {
+          const normalRatio = data.normal / total;
+          const attackRatio = data.attack / total;
+          $gtBarNormal.style.width = (normalRatio * 100) + '%';
+          $gtBarAttack.style.width = (attackRatio * 100) + '%';
+          $gtNormal.textContent = fmtNum(data.normal);
+          $gtAttack.textContent = fmtNum(data.attack);
+        }
+      } catch (_) {}
     }
 
     // ── Core ─────────────────────────────────────────────────────
@@ -571,7 +940,6 @@
     }
 
     function renderRow(entry) {
-      // Hide empty state once we have data
       $emptyState.style.display = 'none';
 
       rowCounter++;
@@ -581,12 +949,18 @@
       } else {
         totalSafe++;
       }
+      if (entry.is_correct === 1) {
+        totalCorrect++;
+      } else {
+        totalWrong++;
+      }
 
-      // Update counters
       $totalScanned.textContent = fmtNum(totalScanned);
       $totalSafe.textContent = fmtNum(totalSafe);
       $totalBlocked.textContent = fmtNum(totalBlocked);
       $tableCount.textContent = `${Math.min(rowCounter, MAX_ROWS)} / ${MAX_ROWS} dòng gần nhất`;
+
+      updateStatsUI();
 
       const isAttack = entry.prediction === 1;
       const confPct = Math.round(entry.confidence * 100);
@@ -596,7 +970,6 @@
       const rowClass = isAttack ? 'row-attack' : 'row-safe';
       const confFillClass = isAttack ? 'conf-attack' : 'conf-safe';
 
-      // Build row HTML
       const tr = document.createElement('tr');
       tr.className = rowClass;
 
@@ -616,16 +989,29 @@
         <td><span class="badge bg-secondary" style="font-size:0.68rem;">${trueLabelStr}</span></td>
       `;
 
-      // Prepend to table body
       $logBody.prepend(tr);
-
-      // Enforce row limit
       while ($logBody.children.length > MAX_ROWS) {
         $logBody.removeChild($logBody.lastChild);
       }
     }
 
     // ── Controls ────────────────────────────────────────────────
+    async function resetStats() {
+      totalScanned = 0;
+      totalBlocked = 0;
+      totalSafe = 0;
+      totalCorrect = 0;
+      totalWrong = 0;
+      rowCounter = 0;
+      $logBody.innerHTML = '';
+      $emptyState.style.display = '';
+      $tableCount.textContent = '0 / ' + MAX_ROWS + ' dòng gần nhất';
+      updateStatsUI();
+      try {
+        await fetch('/api/reset_stats', { method: 'POST' });
+      } catch (_) {}
+    }
+
     function startMonitoring() {
       if (intervalId !== null) return;
 
@@ -635,7 +1021,6 @@
       setStatus('scanning');
 
       intervalId = setInterval(pollLog, currentInterval);
-      // Fire immediately on start
       pollLog();
     }
 
@@ -653,6 +1038,7 @@
 
     // ── Initial state ───────────────────────────────────────────
     setStatus('idle');
+    loadDatasetStats();
   </script>
 
 </body>

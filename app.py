@@ -15,9 +15,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Duong dan den file model da huan luyen
 MODEL_PATH = os.path.join(BASE_DIR, "ids_model.pkl")
 # Duong dan den file du lieu kiem tra
-DATASET_PATH = os.path.join(BASE_DIR, "dataset", "NSL_ppTest_normal.csv")
+DATASET_PATH = os.path.join(BASE_DIR, "dataset", "NSL_ppTest.csv")
 # Duong dan den file du lieu huan luyen (dung de fit LabelEncoder)
-TRAIN_PATH = os.path.join(BASE_DIR, "dataset", "NSL_boosted-1.csv")
+TRAIN_PATH = os.path.join(BASE_DIR, "dataset", "NSL_boosted-0.csv")
 
 # Tao ung dung Flask voi thu muc template la "templates"
 app = Flask(__name__, template_folder="templates")
@@ -32,8 +32,16 @@ feature_cols = None
 # Ten cot nhan (label) trong DataFrame
 label_col = None
 # Dictionary chua cac LabelEncoder cho cac cot phan loai (categorical)
-# Cac cot nay phai cung cach xu ly nhu khi huan luyen model
 label_encoders = {}
+# ── Bo dem thong ke real-time ──────────────────────────────────────────────────
+stats_lock = __import__("threading").Lock()
+running_stats = {
+    "total": 0,
+    "correct": 0,
+    "wrong": 0,
+    "safe": 0,
+    "blocked": 0,
+}
 
 def load_resources():
     """
@@ -119,6 +127,7 @@ def load_resources():
     print(f"[+] Dataset ready: {df.shape[0]} rows, {df.shape[1]} columns")
     print(f"[+] Features: {feature_cols}")
     print(f"[+] Label: {label_col}")
+    
 
 
 def get_random_log_row():
@@ -151,6 +160,17 @@ def get_random_log_row():
     packet_id = f"PKT-{int(row.name):06d}"
 
     # Tra ve dictionary chua thong tin log
+    # Cap nhat bo dem thong ke real-time
+    is_correct = int(prediction == true_label)
+    with stats_lock:
+        running_stats["total"] += 1
+        running_stats["correct"] += is_correct
+        running_stats["wrong"] += 1 - is_correct
+        if prediction == 0:
+            running_stats["safe"] += 1
+        else:
+            running_stats["blocked"] += 1
+
     return {
         "id": packet_id,
         "protocol": protocol,
@@ -159,6 +179,7 @@ def get_random_log_row():
         "prediction": prediction,
         "confidence": round(probability, 4),
         "true_label": true_label,
+        "is_correct": is_correct,
     }
 
 
@@ -185,17 +206,44 @@ def stream_logs():
 @app.route("/api/stats", methods=["GET"])
 def stats():
     """
-    Tra ve so luong mau normal va attack trong tap du lieu (dung tham khao).
+    Tra ve thong ke real-time: tong so, so dung, so sai, accuracy cua model.
     """
     try:
         label_counts = df[label_col].value_counts().to_dict()
+        with stats_lock:
+            s = dict(running_stats)
+        total = s["total"]
+        accuracy = round(s["correct"] / total * 100, 2) if total > 0 else 0.0
         return jsonify({
             "total": int(len(df)),
             "normal": int(label_counts.get(0, 0)),
             "attack": int(label_counts.get(1, 0)),
+            # Real-time session stats
+            "session_scanned": s["total"],
+            "session_correct": s["correct"],
+            "session_wrong": s["wrong"],
+            "session_safe": s["safe"],
+            "session_blocked": s["blocked"],
+            "session_accuracy": accuracy,
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# Route API reset bo dem thong ke
+@app.route("/api/reset_stats", methods=["POST"])
+def reset_stats():
+    """Reset bo dem thong ke real-time ve 0."""
+    global running_stats
+    with stats_lock:
+        running_stats = {
+            "total": 0,
+            "correct": 0,
+            "wrong": 0,
+            "safe": 0,
+            "blocked": 0,
+        }
+    return jsonify({"status": "reset", "stats": running_stats})
 
 
 # Khoi dong Flask server khi chay truc tiep file nay
