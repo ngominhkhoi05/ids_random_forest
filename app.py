@@ -7,7 +7,7 @@ import os
 import joblib
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
 from flask import Flask, jsonify, send_from_directory
 
 # Thu muc goc cua file app.py
@@ -16,7 +16,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "ids_model.pkl")
 # Duong dan den file du lieu kiem tra
 DATASET_PATH = os.path.join(BASE_DIR, "dataset", "NSL_ppTest.csv")
-# Duong dan den file du lieu huan luyen (dung de fit LabelEncoder)
+# Duong dan den file du lieu huan luyen (dung de fit OneHotEncoder)
 TRAIN_PATH = os.path.join(BASE_DIR, "dataset", "NSL_boosted-0.csv")
 
 # Tao ung dung Flask voi thu muc template la "templates"
@@ -27,11 +27,11 @@ app = Flask(__name__, template_folder="templates")
 model = None
 # DataFrame chua du lieu kiem tra da duoc xu ly
 df = None
-# Danh sach 41 ten cot feature ma model yeu cau
+# Danh sach ten cot feature ma model yeu cau (so cot tuy thuoc vao OHE)
 feature_cols = None
 # Ten cot nhan (label) trong DataFrame
 label_col = None
-# Dictionary chua cac LabelEncoder cho cac cot phan loai (categorical)
+# Dictionary chua OneHotEncoder cho cac cot phan loai (categorical)
 label_encoders = {}
 # ── Bo dem thong ke real-time ──────────────────────────────────────────────────
 stats_lock = __import__("threading").Lock()
@@ -45,13 +45,13 @@ running_stats = {
 
 def load_resources():
     """
-    Tai model va du lieu, ma hoa cac cot phan loai dung cach nhu trong notebook.
+    Tai model va du lieu, ma hoa cac cot phan loai bang One-Hot Encoding.
 
     Model duoc huan luyen voi cac buoc:
       1. Xoa ['difficulty_level', 'atakcat'] khoi du lieu huan luyen
       2. Doi ten 'label' -> 'class'
-      3. LabelEncode ['protocol_type', 'service', 'flag'] tren du lieu huan luyen
-      4. X_train = tat ca cac cot tru 'class' (41 cot, theo dung thu tu cot goc)
+      3. OneHotEncode ['protocol_type', 'service', 'flag'] tren du lieu huan luyen
+      4. X_train = tat ca cac cot tru 'class' (nhieu hon 41 cot do OHE)
     """
     global model, df, feature_cols, label_col, label_encoders
 
@@ -59,77 +59,61 @@ def load_resources():
     print("[*] Loading model from:", MODEL_PATH)
     model = joblib.load(MODEL_PATH)
 
-    # Lay ten cac cot tu model lam chuan, dam bao dung thu tu
-    feature_cols = list(model.feature_names_in_)
-    print(f"[+] Model expects {len(feature_cols)} features: {feature_cols}")
-
-    # Tai du lieu huan luyen de lay cac lop cua LabelEncoder va nhan ground-truth
+    # Tai du lieu huan luyen de lay cac lop cua OneHotEncoder va nhan ground-truth
     print("[*] Loading training data:", TRAIN_PATH)
     train_df = pd.read_csv(TRAIN_PATH)
-    # Loai bo cac cot khong can thiet
     train_df = train_df.drop(columns=["difficulty_level", "atakcat"], errors="ignore")
-    # Doi ten cot label thanh class
     if "label" in train_df.columns:
         train_df = train_df.rename(columns={"label": "class"})
-    label_col = "class"  # xac nhan tu notebook
+    label_col = "class"
 
-    # Chuyen nhan tu string sang so (0=normal, 1=attack) de hien thi
+    # Chuyen nhan tu string sang so (0=normal, 1=attack)
     train_df[label_col] = train_df[label_col].apply(
         lambda x: 0 if x == "normal" else 1
     )
 
-    # Fit LabelEncoder tren cac cot phan loai cua du lieu huan luyen
-    # Cac cot nay la: protocol_type, service, flag
+    # Fit OneHotEncoder tren cac cot phan loai cua du lieu huan luyen
     categorical_cols = ["protocol_type", "service", "flag"]
-    for col in categorical_cols:
-        le = LabelEncoder()
-        le.fit(train_df[col].astype(str))
-        label_encoders[col] = le
+    ohe = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
+    ohe.fit(train_df[categorical_cols].astype(str))
+    label_encoders["ohe"] = ohe
 
-    # Hien thi cac lop cua LabelEncoder de kiem tra
-    print(f"[+] LabelEncoder classes:")
-    for col in categorical_cols:
-        classes = list(label_encoders[col].classes_)
-        print(f"    {col}: {classes}")
+    # Hien thi so luong cot sau OHE
+    ohe_cols = ohe.get_feature_names_out(categorical_cols)
+    print(f"[+] OneHotEncoder fitted on {len(categorical_cols)} categorical columns")
+    print(f"    -> {len(ohe_cols)} one-hot columns created")
+
+    # Transform train data
+    train_encoded = ohe.transform(train_df[categorical_cols].astype(str))
+    train_ohe_df = pd.DataFrame(train_encoded, columns=ohe_cols, index=train_df.index)
+    train_df = pd.concat([train_df.drop(columns=categorical_cols), train_ohe_df], axis=1)
 
     # Tai du lieu kiem tra va ap dung cung cac phep bien doi
     print("[*] Loading test data:", DATASET_PATH)
     df = pd.read_csv(DATASET_PATH)
-    df = df.drop(columns=["atakcat"], errors="ignore")
+    df = df.drop(columns=["difficulty_level", "atakcat"], errors="ignore")
     if "label" in df.columns:
         df = df.rename(columns={"label": "class"})
 
-    # Ma hoa cac cot phan loai (fit tren train, transform tren test)
-    for col in categorical_cols:
-        df[col] = df[col].astype(str)
-        # Gan gia tri "<unknown>" cho nhung gia tri khong co trong tap lop
-        # De dam bao transform khong bi loi
-        df[col] = df[col].where(
-            df[col].isin(label_encoders[col].classes_),
-            "<unknown>"
-        )
-        if "<unknown>" not in label_encoders[col].classes_:
-            label_encoders[col].classes_ = np.append(
-                label_encoders[col].classes_, "<unknown>"
-            )
-        df[col] = label_encoders[col].transform(df[col])
+    # Transform test data voi OHE (da fit tren train)
+    test_encoded = ohe.transform(df[categorical_cols].astype(str))
+    test_ohe_df = pd.DataFrame(test_encoded, columns=ohe_cols, index=df.index)
+    df = pd.concat([df.drop(columns=categorical_cols), test_ohe_df], axis=1)
 
     # Chuyen nhan ground-truth sang 0/1
-    # Ho tro ca dtype object (pandas cu) va string (pandas 2+/3.x)
     if df[label_col].dtype != np.int64 and df[label_col].dtype != np.int32:
         df[label_col] = df[label_col].apply(
             lambda x: 0 if x == "normal" else 1
         )
 
-    # Chi giu lai 41 cot feature (cung thu tu nhu model yeu cau)
+    # Lay feature_cols tu model (dam bao dung thu tu)
+    feature_cols = list(model.feature_names_in_)
+    # Chi giu lai cac cot feature (cung thu tu nhu model yeu cau) + label
     df = df[feature_cols + [label_col]]
 
     print(f"[+] Dataset ready: {df.shape[0]} rows, {df.shape[1]} columns")
     print(f"[+] Features: {feature_cols}")
     print(f"[+] Label: {label_col}")
-    
-
-
 def get_random_log_row():
     """
     Chon ngau nhien mot dong du lieu, trich xuat features, chay du doan model.
@@ -142,16 +126,16 @@ def get_random_log_row():
     # Lay nhan ground-truth (chi de hien thi, khong dua vao model)
     true_label = int(row[label_col])
 
-    # Lay tat ca 41 cot feature, da duoc LabelEncoded boi load_resources()
+    # Lay tat ca cac cot feature, da duoc OHE boi load_resources()
     X = row[feature_cols].values.reshape(1, -1).astype(float)
 
     # Chay du doan bang model
     prediction = int(model.predict(X)[0])
     probability = float(model.predict_proba(X)[0][prediction])
 
-    # Giai ma protocol tra ve chuoi doc duoc (nguoc tu so sang ten)
-    protocol_encoded = int(row["protocol_type"])
-    protocol = label_encoders["protocol_type"].inverse_transform([protocol_encoded])[0]
+    # Lay gia tri protocol tu cot OHE tuong ung (nguoc tu one-hot sang ten)
+    protocol_col = [c for c in row.index if c.startswith("protocol_type_") and row[c] == 1]
+    protocol = protocol_col[0].replace("protocol_type_", "") if protocol_col else "unknown"
 
     # Lay cac gia tri bytes
     src_bytes = int(row.get("src_bytes", 0))
